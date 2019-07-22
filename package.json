@@ -1,0 +1,17 @@
+{
+  "name": "strjun-fetch",
+  "version": "1.0.5",
+  "description": "搭建自己的接口npm文件",
+  "main": "app.js",
+  "scripts": {},
+  "keywords": [
+    "ajax",
+    "fetch",
+    "javascript"
+  ],
+  "author": "strliu",
+  "license": "MIT",
+  "dependencies": {
+    "node-fetch": "^2.6.0"
+  }
+}
