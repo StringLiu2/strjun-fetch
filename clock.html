@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        ul {
+            list-style: none;
+        }
+
+        .canvas {
+            position: absolute;
+            width: 401px;
+            height: 401px;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .timepiece {
+/*            background-color: lightgreen;*/
+            position: relative;
+            width: 401px;
+            height: 401px;
+            border: 2px solid #000;
+            box-shadow: 2px 3px 30px #aaa;
+            border-radius: 50%;
+            margin: 80px auto;
+            user-select: none;
+        }
+
+        .constantly .li {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            transform: translate(-50%);
+            width: 2px;
+            height: 9px;
+            background-color: #000;
+            transform-origin: center 200px;
+        }
+
+        .constantly .lip {
+            width: 4px;
+            height: 12px;
+        }
+
+        .interval {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 30px;
+            height: 30px;
+            background-color: #fff;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 100px;
+            z-index: 2;
+            box-shadow: 0 3px 20px #000;
+        }
+
+        .second {
+            position: absolute;
+            left: 50%;
+            top: 0px;
+            transform: translateX(-50%);
+            transform-origin: center 200px;
+            width: 8px;
+            height: 18px;
+            background-color: aqua;
+            /* border-bottom-left-radius: 4px;
+            border-bottom-right-radius: 4px; */
+            border-radius: 8px;
+
+        }
+
+        .minute {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -100%);
+            width: 5px;
+            height: 180px;
+            background-color: #fff;
+            border-radius: 2px;
+            transform-origin: bottom;
+            box-shadow: 0 0 10px #666;
+        }
+
+        a {
+            position: absolute;
+            font-size: 22px;
+            font-weight: blod;
+        }
+
+        a:nth-of-type(1) {
+            top: -34px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        a:nth-of-type(2) {
+            right: -34px;
+            transform: translateY(-50%);
+            top: 50%;
+        }
+
+        a:nth-of-type(3) {
+            bottom: -34px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        a:nth-of-type(4) {
+            transform: translateY(-50%);
+            top: 50%;
+            left: -34px;
+        }
+
+        button {
+            cursor: pointer;
+            border: 2px solid #ccc;
+
+            width: 140px;
+            height: 44px;
+            border-radius: 30px;
+            color: #fff;
+            background-color: #3383ff;
+        }
+
+        button[disabled=true] {
+            opacity: 0.6;
+            color: #aaa;
+            cursor: no-drop;
+        }
+
+        .input,
+        .input2 {
+            width: 200px;
+            height: 40px;
+            padding: 0 16px;
+            border-radius: 10px;
+            box-sizing: border-box;
+            border: 2px solid #ccc;
+        }
+
+        .setting {
+            width: 500px;
+            margin: 0 auto;
+        }
+
+        .select {
+            border: 2px solid #ccc;
+            width: 200px;
+            height: 40px;
+            border-radius: 16px;
+        }
+
+    </style>
+</head>
+
+<body>
+    <canvas class="canvas" width="401" height="401"></canvas>
+    <div class="timepiece">
+        <a>0</a>
+        <a>15</a>
+        <a>30</a>
+        <a>45</a>
+        <!-- 钟表的时刻 -->
+        <ul class="constantly"></ul>
+        <!-- 钟表的中间 -->
+        <div class="interval"></div>
+        <!-- 绘制一个分钟的指针 -->
+        <div class="minute"></div>
+    </div>
+
+    <div class="setting">
+            
+        <button class="start">开始</button>
+
+        <button class="pause">暂停</button>
+
+        <button class="reset">重置</button>
+
+        <p>
+            当前时间：
+            <input class="input" type="number" placeholder="请输入time"></input>
+            s
+        </p>
+
+        <p>
+            定时器：
+            <input class="input2" type="number"></input>
+            ms
+        </p>
+
+
+        <p>
+            铃声：
+            <select class="select"></select>
+        </p>
+    </div>
+
+    <script>
+        const timepiece = document.querySelector('.timepiece');
+        const ul = document.querySelector('.constantly')
+        const interval = document.querySelector('.interval')
+        const minute = document.querySelector('.minute')
+        const canvas = document.querySelector('.canvas')
+
+        const startBtn = document.querySelector('.start');
+        const pauseBtn = document.querySelector('.pause');
+        const resetBtn = document.querySelector('.reset');
+
+        const input = document.querySelector(".input");
+        const input2 = document.querySelector(".input2");
+
+        const select = document.querySelector('.select');
+
+        const ctx = canvas.getContext('2d');
+
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const radius = canvas.height / 2;
+
+        const startAngle = Math.PI * 1.5;
+
+        // 遍历实现时钟刻度
+        for (let i = 0; i < 12; i++) {
+            let li = document.createElement('li')
+            li.style.transform = `translate(-50%) rotate(${i * 30}deg)`
+            ul.appendChild(li)
+            ul.children[i].classList.add('li')
+        }
+
+        for (let j = 0; j < 4; j++) {
+            ul.children[j * 3].classList.add('lip')
+        }
+
+        const MAX_TIME = 3600;
+        // 1deg 等于 10秒，360deg = 3600s
+        const ONE_DEG = 10;
+
+        // 五分钟走一格
+        let time = 0;
+        // 设置定时器让时钟实时动起来
+        let timer = null;
+        // 设定的定时器多少秒执行一次
+        let startIntervalTime = 1000;
+
+        let audio = null;
+
+
+        const oneDegValue = Math.PI / 180;
+        let curDeg = time / 10;
+
+        init();
+
+        function start() {
+            timer = setInterval(() => {
+                time++;
+                // time += 10;
+                render();
+            }, startIntervalTime);
+        }
+
+        function pause() {
+            clearInterval(timer);
+            timer = null;
+        }
+
+        function renderElement() {
+            input.value = time;
+
+            const deg = time / ONE_DEG;
+            curDeg = deg;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            if (deg > 270) {
+                // 红色
+                ctx.fillStyle = 'red';
+            } else if (deg > 180) {
+                // 黄色
+                ctx.fillStyle = 'yellow';
+            } else if (deg >= 90) {
+                // 蓝色
+                ctx.fillStyle = 'lightblue';
+            } else {
+                // 绿色
+                ctx.fillStyle = 'lightgreen';
+            }
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.arc(centerX, centerY, radius, startAngle, startAngle - (Math.PI * (2 - (deg / 180))), true);
+            ctx.lineTo(centerX, centerY);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+
+            minute.style.transform = `translate(-50%, -100%) rotate(${deg}deg)`;
+        }
+
+
+        function render() {
+            if (time >= MAX_TIME) {
+                pause();
+                if (audio) {
+                    audio = audio.url === select.value ? audio : new Audio(select.value);
+                    audio.play();   
+                }
+                resetBtn.removeAttribute("disabled");
+                pauseBtn.setAttribute("disabled", true);
+            }
+            renderElement();
+        }
+
+        function init() {
+            render();
+
+            input2.value = startIntervalTime;
+            pauseBtn.setAttribute('disabled', true);
+            resetBtn.setAttribute('disabled', true);
+
+            startBtn.addEventListener("click", () => {
+                if (!timer) {
+                    start();
+                    audio && audio.pause();
+                    input.setAttribute('disabled', true);
+                    input2.setAttribute('disabled', true);
+                    select.setAttribute('disabled', true);
+                    startBtn.setAttribute('disabled', true);
+                    pauseBtn.removeAttribute('disabled');
+                    resetBtn.setAttribute('disabled', true);
+                }
+            });
+
+            pauseBtn.addEventListener("click", () => {
+                input.removeAttribute('disabled');
+                input2.removeAttribute('disabled');
+                select.removeAttribute('disabled');
+                startBtn.removeAttribute('disabled');
+                pauseBtn.setAttribute('disabled', true);
+                resetBtn.removeAttribute('disabled');
+                pause();
+            });
+
+            resetBtn.addEventListener("click", () => {
+                audio && audio.pause();
+                resetBtn.setAttribute('disabled', true);
+                input.removeAttribute('disabled');
+                input2.removeAttribute('disabled');
+                select.removeAttribute('disabled');
+                startBtn.removeAttribute('disabled');
+                pauseBtn.setAttribute('disabled', true);
+
+                time = 0;
+                input.value = time;
+                render();
+            });
+
+            input.addEventListener("change", e => {
+                const value = Math.min(Math.abs(parseInt(e.target.value)), 3600);
+
+                e.target.value = value;
+
+                time = value;
+                render();
+            });
+
+            input2.addEventListener("change", e => {
+                const value = Math.abs(parseInt(e.target.value));
+
+                e.target.value = value;
+
+                startIntervalTime = value;
+            });
+
+            createSelect();
+
+            createDrag();
+        }
+
+        function createSelect() {
+            const mp3List = [
+                {
+                    value: "https://hao.haolingsheng.com/ring/000/995/52513bb6a4546b8822c89034afb8bacb.mp3",
+                    label: "歌曲《是我太傻了》"
+                },
+                {
+                    value: "https://hao.haolingsheng.com/ring/000/965/231624ece7e0b9646a9ff9bed66171c4.mp3",
+                    label: "歌曲《告白气球》"
+                },
+                {
+                    value: "https://hao.haolingsheng.com/ring/000/993/fc0fab7d5d00c2b345b4f57913df868b.mp3",
+                    label: "歌曲《等你下课》"
+                },
+                {
+                    value: "https://hao.haolingsheng.com/ring/000/965/4e42a8159a0f5c25f1515f10f50b22e8.mp3",
+                    label: "歌曲《爱情废柴》"
+                },
+                {
+                    value: "https://hao.haolingsheng.com/ring/000/995/f1b408f77bc8d27a6f5665c1be02df5d.mp3",
+                    label: "歌曲《Making Me Feel》"
+                },
+                {
+                    value: "https://hao.haolingsheng.com/ring/000/995/6f98624d7ca22b56291a09ea08812c94.mp3",
+                    label: "歌曲《No matter》"
+                },
+                {
+                    value: "https://hao.haolingsheng.com/ring/000/970/5704d7c21c42ddab6456f6aa25620960.mp3",
+                    label: "iphone7 铃声"
+                },
+                {
+                    value: "https://hao.haolingsheng.com/ring/000/982/3dac89285d5412642006598c09c907af.mp3",
+                    label: "歌曲《Despacito (Remix)》"
+                },
+                {
+                    value: "https://hao.haolingsheng.com/ring/000/977/f35a119f8b07cf1f81e091e5c0823d2b.mp3",
+                    label: "歌曲《I Miss You》"
+                },
+                {
+                    value: "https://hao.haolingsheng.com/ring/000/977/bfb42d74c4d03597060341477a757579.mp3",
+                    label: "歌曲《光年之外》"
+                },
+                {
+                    value: "https://hao.haolingsheng.com/ring/000/995/899004608491de178a7234ab5538feb9.mp3",
+                    label: "歌曲《Next of Kin》"
+                }
+            ];
+
+
+            const documentFragment = document.createDocumentFragment();
+            mp3List.forEach(item => {
+                const option = document.createElement("option");
+                option.value = item.value;
+                option.innerText = item.label;
+
+                documentFragment.appendChild(option);
+            });
+
+            select.appendChild(documentFragment);
+
+            audio = new Audio(select.value || mp3List[0].value);
+        }
+
+
+        function createDrag(){
+            let isDrag = false;
+            // 是否绑定了事件
+            let isBindEvent = false;
+            function startDrag (ev) {
+                // 开始计时了，不能移动
+                if (timer) return;
+                isDrag = true;
+               // 获取旧位置
+                const disX = ev.clientX - minute.offsetLeft;
+                const disY = ev.clientY - minute.offsetTop;
+
+                function mousemove(e){
+                    if (!isDrag) return;
+                    // 设置新位置
+                    const x = e.clientX - disX - radius;
+                    // 145是指针的高度
+                    const y = radius - (e.clientY - disY - 145);
+
+                    const sqrt = Math.sqrt(x * x + y * y);
+                    let cos = Math.acos(y / sqrt);
+                    
+                    let deg = cos / oneDegValue;
+                    if (x < 0) {
+                        deg = (Math.PI * 2 - cos) / oneDegValue;
+                    }
+
+                    time = parseInt(parseFloat((deg).toFixed(2)) * 10);
+                    
+                    renderElement();
+                };
+
+                function mouseup () {
+                    isDrag = false;
+                };
+                if (isBindEvent) return;
+                isBindEvent = true;
+                timepiece.addEventListener('mousemove', mousemove);
+                
+                timepiece.addEventListener('mouseup', mouseup);
+
+                // timepiece.addEventListener('touchmove', mouseup);                
+                return false;
+            }
+            // minute.addEventListener("touchstart", startDrag)
+            minute.addEventListener("mousedown", startDrag);
+
+            // 处理移出去当前元素后，不能drag
+            document.addEventListener("mouseout", function(e) {
+                if (timepiece.contains(e.target)) {
+                    return;
+                }
+                isDrag = false;
+            });
+
+            // document.addEventListener("touchend", function(e) {
+            //     if (timepiece.contains(e.target)) {
+            //         return;
+            //     }
+            //     isDrag = false;
+            // });
+        };
+    </script>
+</body>
+
+</html>
